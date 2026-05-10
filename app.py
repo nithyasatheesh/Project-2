@@ -1,57 +1,49 @@
+# =========================
 # app.py
+# =========================
 
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import PyPDF2
 
-from agents.audio_summary_agent import AudioSummaryAgent
 from agents.coding_tutor_agent import CodingTutorAgent
-from agents.evaluator import EvaluatorAgent
-from agents.quiz_generator_agent import QuizGeneratorAgent
 from agents.summary_agent import SummaryAgent
+from agents.quiz_generator_agent import QuizGeneratorAgent
+from agents.audio_summary_agent import AudioSummaryAgent
 from agents.visualization_agent import VisualizationAgent
+from agents.evaluator import EvaluatorAgent
 
-# ------------------------------------------------ #
+# =========================================================
 # PAGE CONFIG
-# ------------------------------------------------ #
+# =========================================================
 
 st.set_page_config(
     page_title="Multi-Agent AI Learning Platform",
-    page_icon="💻",
+    page_icon="🤖",
     layout="wide"
 )
 
-st.title("💻 Multi-Agent AI Technical Learning Platform")
+st.title("🤖 Multi-Agent AI Learning Platform")
 
-st.markdown("""
-### Features
-- Coding Tutor Agent
-- Summary Agent
-- Evaluator Agent
-- Interactive Quiz Generator
-- Dataset Visualization
-- Audio Learning Summary
-""")
-
-# ------------------------------------------------ #
-# INITIALIZE AGENTS
-# ------------------------------------------------ #
+# =========================================================
+# AGENTS
+# =========================================================
 
 coding_agent = CodingTutorAgent()
 
 summary_agent = SummaryAgent()
 
-evaluator_agent = EvaluatorAgent()
-
 quiz_agent = QuizGeneratorAgent()
-
-visual_agent = VisualizationAgent()
 
 audio_agent = AudioSummaryAgent()
 
-# ------------------------------------------------ #
+visual_agent = VisualizationAgent()
+
+evaluator_agent = EvaluatorAgent()
+
+# =========================================================
 # SESSION STATE
-# ------------------------------------------------ #
+# =========================================================
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -62,9 +54,9 @@ if "quiz_data" not in st.session_state:
 if "quiz_answers" not in st.session_state:
     st.session_state.quiz_answers = {}
 
-# ------------------------------------------------ #
+# =========================================================
 # SIDEBAR
-# ------------------------------------------------ #
+# =========================================================
 
 agent_type = st.sidebar.selectbox(
     "Select Agent",
@@ -76,9 +68,9 @@ agent_type = st.sidebar.selectbox(
     ]
 )
 
-# ------------------------------------------------ #
-# AGENT SWITCH HANDLER
-# ------------------------------------------------ #
+# =========================================================
+# CLEAR CHAT WHEN AGENT CHANGES
+# =========================================================
 
 if "last_agent" not in st.session_state:
 
@@ -86,19 +78,19 @@ if "last_agent" not in st.session_state:
 
 if st.session_state.last_agent != agent_type:
 
+    st.session_state.messages = []
+
     st.session_state.quiz_data = None
 
     st.session_state.quiz_answers = {}
-
-    st.session_state.messages = []
 
     st.session_state.last_agent = agent_type
 
     st.rerun()
 
-# ------------------------------------------------ #
-# CHAT HISTORY
-# ------------------------------------------------ #
+# =========================================================
+# DISPLAY CHAT HISTORY
+# =========================================================
 
 for msg in st.session_state.messages:
 
@@ -106,9 +98,9 @@ for msg in st.session_state.messages:
 
         st.markdown(msg["content"])
 
-# ------------------------------------------------ #
-# FILE HELPERS
-# ------------------------------------------------ #
+# =========================================================
+# HELPERS
+# =========================================================
 
 def read_text_file(file):
 
@@ -131,66 +123,81 @@ def read_pdf_file(file):
 
     return text
 
-# ================================================= #
+
+def truncate_text(text, limit=4000):
+
+    if len(text) > limit:
+
+        return text[:limit]
+
+    return text
+
+# =========================================================
 # EVALUATOR AGENT
-# ================================================= #
+# =========================================================
 
 if agent_type == "Evaluator Agent":
 
-    st.markdown("# 🧪 Evaluator Agent")
+    st.header("🧪 Evaluator Agent")
 
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
     # PROBLEM STATEMENT
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
 
-    problem_statement = st.text_area(
-        "📝 Type Problem Statement (Optional)",
+    st.subheader("📄 Problem Statement")
+
+    typed_problem_statement = st.text_area(
+        "Type Problem Statement (Optional)",
         height=180
     )
 
     uploaded_problem = st.file_uploader(
-        "📂 Upload Problem Statement",
+        "Upload Problem Statement",
         type=[
             "txt",
+            "pdf",
             "py",
             "html",
-            "pdf",
             "docx"
         ],
-        key="problem_upload"
+        key="problem_statement"
     )
 
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
     # RUBRIC
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
 
-    rubric = st.text_area(
-        "📋 Type Evaluation Rubric (Optional)",
+    st.subheader("📋 Evaluation Rubric")
+
+    typed_rubric = st.text_area(
+        "Type Rubric (Optional)",
         height=180
     )
 
     uploaded_rubric = st.file_uploader(
-        "📂 Upload Rubric",
+        "Upload Rubric",
         type=[
             "txt",
             "pdf",
             "csv",
             "xlsx"
         ],
-        key="rubric_upload"
+        key="rubric"
     )
 
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
     # PARTICIPANT SUBMISSION
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
 
-    participant_submission = st.text_area(
-        "💻 Type Participant Submission (Optional)",
-        height=250
+    st.subheader("💻 Participant Submission")
+
+    typed_submission = st.text_area(
+        "Type Submission (Optional)",
+        height=220
     )
 
     uploaded_submission = st.file_uploader(
-        "📂 Upload Participant Submission",
+        "Upload Submission",
         type=[
             "txt",
             "py",
@@ -199,63 +206,66 @@ if agent_type == "Evaluator Agent":
             "csv",
             "xlsx"
         ],
-        key="submission_upload"
+        key="submission"
     )
 
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
     # OPTIONAL DATASET
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
+
+    st.subheader("📊 Optional Dataset")
 
     uploaded_dataset = st.file_uploader(
-        "📊 Optional Dataset Upload",
+        "Upload Dataset",
         type=[
             "csv",
             "xlsx"
         ],
-        key="dataset_upload"
+        key="dataset"
     )
+
+    # =====================================================
+    # PROCESS FILES
+    # =====================================================
+
+    problem_statement = typed_problem_statement
+
+    rubric = typed_rubric
+
+    participant_submission = typed_submission
 
     dataset_info = ""
 
-    # ------------------------------------------------ #
-    # PROCESS PROBLEM STATEMENT
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
+    # PROBLEM FILE
+    # -----------------------------------------------------
 
     if uploaded_problem is not None:
 
-        # TXT / PY / HTML
-
-        if (
-            uploaded_problem.name.endswith(".txt")
-            or uploaded_problem.name.endswith(".py")
-            or uploaded_problem.name.endswith(".html")
-        ):
-
-            problem_statement += (
-                "\n\n"
-                + read_text_file(uploaded_problem)
-            )
-
-        # PDF
-
-        elif uploaded_problem.name.endswith(".pdf"):
+        if uploaded_problem.name.endswith(".pdf"):
 
             problem_statement += (
                 "\n\n"
                 + read_pdf_file(uploaded_problem)
             )
 
-        st.markdown("## 📄 Problem Statement Preview")
+        else:
 
-        st.text(problem_statement[:3000])
+            problem_statement += (
+                "\n\n"
+                + read_text_file(uploaded_problem)
+            )
 
-    # ------------------------------------------------ #
-    # PROCESS RUBRIC
-    # ------------------------------------------------ #
+        st.success(
+            f"Problem statement uploaded: "
+            f"{uploaded_problem.name}"
+        )
+
+    # -----------------------------------------------------
+    # RUBRIC FILE
+    # -----------------------------------------------------
 
     if uploaded_rubric is not None:
-
-        # TXT
 
         if uploaded_rubric.name.endswith(".txt"):
 
@@ -264,8 +274,6 @@ if agent_type == "Evaluator Agent":
                 + read_text_file(uploaded_rubric)
             )
 
-        # PDF
-
         elif uploaded_rubric.name.endswith(".pdf"):
 
             rubric += (
@@ -273,22 +281,16 @@ if agent_type == "Evaluator Agent":
                 + read_pdf_file(uploaded_rubric)
             )
 
-        # CSV
-
         elif uploaded_rubric.name.endswith(".csv"):
 
             rubric_df = pd.read_csv(
                 uploaded_rubric
             )
 
-            st.dataframe(rubric_df)
-
             rubric += (
                 "\n\n"
                 + rubric_df.to_string()
             )
-
-        # XLSX
 
         elif uploaded_rubric.name.endswith(".xlsx"):
 
@@ -296,32 +298,27 @@ if agent_type == "Evaluator Agent":
                 uploaded_rubric
             )
 
-            st.dataframe(rubric_df)
-
             rubric += (
                 "\n\n"
                 + rubric_df.to_string()
             )
 
-        st.markdown("## 📋 Rubric Preview")
+        st.success(
+            f"Rubric uploaded: "
+            f"{uploaded_rubric.name}"
+        )
 
-        st.text(rubric[:3000])
-
-    # ------------------------------------------------ #
-    # PROCESS PARTICIPANT SUBMISSION
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
+    # SUBMISSION FILE
+    # -----------------------------------------------------
 
     if uploaded_submission is not None:
 
-        file_name = uploaded_submission.name
-
-        # TXT / PY / HTML / SQL
-
         if (
-            file_name.endswith(".txt")
-            or file_name.endswith(".py")
-            or file_name.endswith(".html")
-            or file_name.endswith(".sql")
+            uploaded_submission.name.endswith(".txt")
+            or uploaded_submission.name.endswith(".py")
+            or uploaded_submission.name.endswith(".html")
+            or uploaded_submission.name.endswith(".sql")
         ):
 
             participant_submission += (
@@ -329,43 +326,36 @@ if agent_type == "Evaluator Agent":
                 + read_text_file(uploaded_submission)
             )
 
-            st.code(
-                participant_submission[:3000]
-            )
-
-        # CSV
-
-        elif file_name.endswith(".csv"):
+        elif uploaded_submission.name.endswith(".csv"):
 
             df = pd.read_csv(
                 uploaded_submission
             )
 
-            st.dataframe(df.head())
-
             participant_submission += (
-                "\n\nDataset Preview:\n"
+                "\n\n"
                 + df.head(20).to_string()
             )
 
-        # XLSX
-
-        elif file_name.endswith(".xlsx"):
+        elif uploaded_submission.name.endswith(".xlsx"):
 
             df = pd.read_excel(
                 uploaded_submission
             )
 
-            st.dataframe(df.head())
-
             participant_submission += (
-                "\n\nExcel Preview:\n"
+                "\n\n"
                 + df.head(20).to_string()
             )
 
-    # ------------------------------------------------ #
+        st.success(
+            f"Submission uploaded: "
+            f"{uploaded_submission.name}"
+        )
+
+    # -----------------------------------------------------
     # OPTIONAL DATASET
-    # ------------------------------------------------ #
+    # -----------------------------------------------------
 
     if uploaded_dataset is not None:
 
@@ -381,17 +371,42 @@ if agent_type == "Evaluator Agent":
                 uploaded_dataset
             )
 
-        st.markdown("## 📊 Dataset Preview")
+        st.markdown("### 📊 Dataset Preview")
 
         st.dataframe(dataset_df.head())
 
-        dataset_info = dataset_df.describe(
-            include="all"
-        ).to_string()
+        dataset_info = (
+            dataset_df.head(10)
+            .to_string()
+        )
 
-    # ------------------------------------------------ #
+    # =====================================================
+    # TRUNCATE CONTENT
+    # =====================================================
+
+    problem_statement = truncate_text(
+        problem_statement,
+        4000
+    )
+
+    rubric = truncate_text(
+        rubric,
+        3000
+    )
+
+    participant_submission = truncate_text(
+        participant_submission,
+        6000
+    )
+
+    dataset_info = truncate_text(
+        dataset_info,
+        2000
+    )
+
+    # =====================================================
     # RUN EVALUATION
-    # ------------------------------------------------ #
+    # =====================================================
 
     if st.button("🚀 Evaluate Submission"):
 
@@ -426,17 +441,15 @@ if agent_type == "Evaluator Agent":
                     dataset_info
                 )
 
-            st.markdown(
-                "# 📊 Evaluation Result"
-            )
+            st.markdown("## 📊 Evaluation Result")
 
             st.markdown(response)
 
-            # Audio Summary
+            # ---------------------------------------------
+            # AUDIO SUMMARY
+            # ---------------------------------------------
 
-            st.markdown(
-                "## 🔊 Audio Learning Summary"
-            )
+            st.markdown("## 🔊 Audio Summary")
 
             audio_file, summary = (
                 audio_agent.generate_audio_summary(
@@ -458,15 +471,20 @@ if agent_type == "Evaluator Agent":
                     format="audio/mp3"
                 )
 
-# ================================================= #
+# =========================================================
 # OTHER AGENTS
-# ================================================= #
+# =========================================================
 
 else:
 
     uploaded_file = st.file_uploader(
         "📂 Upload Dataset or Code File",
-        type=["csv", "txt", "py", "md"]
+        type=[
+            "csv",
+            "txt",
+            "py",
+            "md"
+        ]
     )
 
     file_content = ""
@@ -488,22 +506,33 @@ else:
                 .decode("utf-8")
             )
 
-            st.code(file_content[:2000])
-
     user_query = st.text_area(
         "💬 Enter your question",
-        height=150
+        height=160
     )
 
     if st.button("🚀 Run Agent"):
 
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_query
+        })
+
         response = ""
+
+        # ------------------------------------------------
+        # CODING TUTOR
+        # ------------------------------------------------
 
         if agent_type == "Coding Tutor":
 
             response = coding_agent.run(
                 user_query
             )
+
+        # ------------------------------------------------
+        # SUMMARY AGENT
+        # ------------------------------------------------
 
         elif agent_type == "Summary Agent":
 
@@ -516,8 +545,12 @@ else:
             else:
 
                 response = (
-                    "Please upload document."
+                    "Please upload a document."
                 )
+
+        # ------------------------------------------------
+        # QUIZ GENERATOR
+        # ------------------------------------------------
 
         elif agent_type == "Quiz Generator":
 
@@ -532,20 +565,15 @@ else:
             )
 
         st.session_state.messages.append({
-            "role": "user",
-            "content": user_query
-        })
-
-        st.session_state.messages.append({
             "role": "assistant",
             "content": response
         })
 
         st.rerun()
 
-# ================================================= #
+# =========================================================
 # QUIZ DISPLAY
-# ================================================= #
+# =========================================================
 
 if (
     agent_type == "Quiz Generator"
