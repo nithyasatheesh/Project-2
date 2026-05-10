@@ -1,3 +1,7 @@
+# agents/quiz_generator_agent.py
+
+import json
+
 from openai import OpenAI
 
 client = OpenAI()
@@ -8,15 +12,28 @@ class QuizGeneratorAgent:
     def generate_quiz(self, topic):
 
         prompt = f"""
-Generate 5 technical multiple-choice questions on:
+Generate 5 multiple-choice technical questions on:
 
 {topic}
 
-For each question provide:
-- Question
-- 4 options
-- Correct answer
-- Short explanation
+Return ONLY valid JSON in this format:
+
+[
+  {{
+    "question": "Question text",
+    "options": {{
+      "A": "Option A",
+      "B": "Option B",
+      "C": "Option C",
+      "D": "Option D"
+    }},
+    "correct_answer": "A",
+    "explanation": "Explanation text"
+  }}
+]
+
+Do not return markdown.
+Do not return extra text.
 """
 
         response = client.chat.completions.create(
@@ -30,4 +47,14 @@ For each question provide:
             temperature=0.3
         )
 
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+
+        try:
+
+            quiz_data = json.loads(content)
+
+            return quiz_data
+
+        except Exception:
+
+            return []
