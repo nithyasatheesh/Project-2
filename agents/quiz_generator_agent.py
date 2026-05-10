@@ -16,7 +16,7 @@ Generate 5 multiple-choice technical questions on:
 
 {topic}
 
-Return ONLY valid JSON in this format:
+Return ONLY valid JSON in this exact format:
 
 [
   {{
