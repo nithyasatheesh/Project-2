@@ -3,26 +3,35 @@ from openai import OpenAI
 client = OpenAI()
 
 
-class QuizGeneratorAgent:
+class CaseStudyEvaluator:
 
-    def generate_quiz(self, topic):
+    def evaluate(self, submission):
 
         prompt = f"""
-        Generate 5 multiple-choice questions on:
+        You are a technical evaluator.
 
-        {topic}
+        Evaluate the following technical submission.
 
-        Include answers.
+        Return response in this EXACT format:
+
+        Overall Score: X/10
+
+        Technical Accuracy:
+        -
+
+        Strengths:
+        -
+
+        Weaknesses:
+        -
+
+        Suggested Improvements:
+        -
+
+        Final Verdict:
+        -
+
+        Submission:
+        {submission}
         """
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
-
         return response.choices[0].message.content
