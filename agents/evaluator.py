@@ -17,35 +17,31 @@ class EvaluatorAgent:
         prompt = f"""
 You are an enterprise technical evaluator.
 
-Evaluate the participant submission based on:
+Evaluate the participant submission.
 
-1. Problem Statement
-2. Rubric
-3. Participant Submission
-
------------------------------------
+========================
 PROBLEM STATEMENT
------------------------------------
+========================
 
 {problem_statement}
 
------------------------------------
+========================
 RUBRIC
------------------------------------
+========================
 
 {rubric}
 
------------------------------------
+========================
 PARTICIPANT SUBMISSION
------------------------------------
+========================
 
 {submission_content}
 
------------------------------------
+========================
 
 Evaluate thoroughly.
 
-Return response in this EXACT format:
+Return in this EXACT format:
 
 # Evaluation Report
 
@@ -77,7 +73,7 @@ Return response in this EXACT format:
 
 -
 
-Be detailed, professional, and constructive.
+Be professional and constructive.
 """
 
         response = client.chat.completions.create(
