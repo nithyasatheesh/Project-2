@@ -112,69 +112,59 @@ for msg in st.session_state.messages:
 # ================================================= #
 # EVALUATOR AGENT
 # ================================================= #
-# EVALUATOR AGENT
-# ================================================= #
+            dataset_df = pd.read_excel(
+                uploaded_dataset
+            )
 
-if agent_type == "Evaluator Agent":
+        st.markdown("## 📊 Dataset Preview")
 
-    st.markdown("# 🧪 Evaluator Agent")
+        st.dataframe(dataset_df.head())
 
-    # ------------------------------------------------ #
-    # PROBLEM STATEMENT
-    # ------------------------------------------------ #
-
-    problem_statement = st.text_area(
-        "📝 Type Problem Statement (Optional)",
-        height=180
-    )
-
-    uploaded_problem = st.file_uploader(
-        "📂 Upload Problem Statement",
-        type=[
-            "txt",
-            "py",
-            "html",
-            "pdf",
-            "docx"
-        ],
-        key="problem_upload"
-    )
+        dataset_info = dataset_df.describe(
+            include="all"
+        ).to_string()
 
     # ------------------------------------------------ #
-    # RUBRIC
+    # RUN EVALUATION
     # ------------------------------------------------ #
 
-    rubric = st.text_area(
-        "📋 Type Evaluation Rubric (Optional)",
-        height=180
-    )
+    if st.button("🚀 Evaluate Submission"):
 
-    uploaded_rubric = st.file_uploader(
-        "📂 Upload Rubric",
-        type=[
-            "txt",
-            "docx",
-            "pdf"
-        ],
-        key="rubric_upload"
-    )
+        if not problem_statement.strip():
 
-    # ------------------------------------------------ #
-    # PARTICIPANT SUBMISSION
-    # ------------------------------------------------ #
+            st.warning(
+                "Please provide problem statement."
+            )
 
-    participant_submission = st.text_area(
-        "💻 Type Participant Submission (Optional)",
-        height=250
-    )
+        elif not rubric.strip():
 
-    uploaded_submission = st.file_uploader(
-        "📂 Upload Participant Submission",
-        type=[
-            "txt",
-            "py",
-            "html",
-            "sql",
+            st.warning(
+                "Please provide rubric."
+            )
+
+        elif not participant_submission.strip():
+
+            st.warning(
+                "Please provide participant submission."
+            )
+
+        else:
+
+            with st.spinner(
+                "Evaluating submission..."
+            ):
+
+                response = evaluator_agent.evaluate(
+                    problem_statement,
+                    rubric,
+                    participant_submission,
+                    dataset_info
+                )
+
+            st.markdown(
+                "# 📊 Evaluation Result"
+            )
+
             st.markdown(response)
 # ================================================= #
 # OTHER AGENTS
