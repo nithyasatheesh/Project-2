@@ -1,36 +1,51 @@
-
 import pandas as pd
-import streamlit as st
 
-from agents.audio_summary_agent import AudioSummaryAgent
-from agents.case_study_evaluator import CaseStudyEvaluator
-from agents.coding_tutor_agent import CodingTutorAgent
-from agents.quiz_generator_agent import QuizGeneratorAgent
-from agents.summary_agent import SummaryAgent
-from agents.visualization_agent import VisualizationAgent
+    # Coding Tutor
+    if agent_type == "Coding Tutor":
 
-# ---------------- PAGE CONFIG ---------------- #
+        response = coding_agent.run(user_query)
 
-st.set_page_config(
-    page_title="Multi-Agent AI Learning Platform",
-    page_icon="💻",
-    layout="wide"
-)
+    # Summary Agent
+    elif agent_type == "Summary Agent":
 
-st.title("💻 Multi-Agent AI Technical Learning Platform")
+        response = summary_agent.summarize(file_content)
 
-# ---------------- AGENTS ---------------- #
+    # Case Study Evaluator
+    elif agent_type == "Case Study Evaluator":
 
-coding_agent = CodingTutorAgent()
-summary_agent = SummaryAgent()
-case_agent = CaseStudyEvaluator()
-quiz_agent = QuizGeneratorAgent()
-visual_agent = VisualizationAgent()
-audio_agent = AudioSummaryAgent()
+        response = case_agent.evaluate(user_query)
 
-# ---------------- SIDEBAR ---------------- #
+    # Quiz Generator
+    elif agent_type == "Quiz Generator":
 
-agent_type = st.sidebar.selectbox(
-    "Select Agent",
-    [
+        response = quiz_agent.generate_quiz(user_query)
+
+    # ---------------- RESPONSE ---------------- #
+
+    st.markdown("## AI Response")
+
+    st.markdown(response)
+
+    # ---------------- VISUALIZATION ---------------- #
+
+    if df is not None:
+
+        if "missing" in user_query.lower():
+            visual_agent.visualize_missing_values(df)
+
+        if "outlier" in user_query.lower():
+            visual_agent.visualize_outliers(df)
+
+    # ---------------- AUDIO SUMMARY ---------------- #
+
+    st.markdown("## Audio Learning Summary")
+
+    audio_file, summary = audio_agent.generate_audio_summary(
+        response
+    )
+
+    st.markdown(summary)
+
+    audio_bytes = open(audio_file, "rb").read()
+
     st.audio(audio_bytes, format="audio/mp3")
