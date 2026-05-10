@@ -85,18 +85,14 @@ if "last_agent" not in st.session_state:
 
 if st.session_state.last_agent != agent_type:
 
-    # Clear quiz state
     st.session_state.quiz_data = None
 
     st.session_state.quiz_answers = {}
 
-    # Clear chat history
     st.session_state.messages = []
 
-    # Update selected agent
     st.session_state.last_agent = agent_type
 
-    # Refresh UI
     st.rerun()
 
 # ------------------------------------------------ #
@@ -112,6 +108,188 @@ for msg in st.session_state.messages:
 # ================================================= #
 # EVALUATOR AGENT
 # ================================================= #
+
+if agent_type == "Evaluator Agent":
+
+    st.markdown("# 🧪 Evaluator Agent")
+
+    # ------------------------------------------------ #
+    # PROBLEM STATEMENT
+    # ------------------------------------------------ #
+
+    problem_statement = st.text_area(
+        "📝 Type Problem Statement (Optional)",
+        height=180
+    )
+
+    uploaded_problem = st.file_uploader(
+        "📂 Upload Problem Statement",
+        type=[
+            "txt",
+            "py",
+            "html",
+            "pdf",
+            "docx"
+        ],
+        key="problem_upload"
+    )
+
+    # ------------------------------------------------ #
+    # RUBRIC
+    # ------------------------------------------------ #
+
+    rubric = st.text_area(
+        "📋 Type Evaluation Rubric (Optional)",
+        height=180
+    )
+
+    uploaded_rubric = st.file_uploader(
+        "📂 Upload Rubric",
+        type=[
+            "txt",
+            "docx",
+            "pdf"
+        ],
+        key="rubric_upload"
+    )
+
+    # ------------------------------------------------ #
+    # PARTICIPANT SUBMISSION
+    # ------------------------------------------------ #
+
+    participant_submission = st.text_area(
+        "💻 Type Participant Submission (Optional)",
+        height=250
+    )
+
+    uploaded_submission = st.file_uploader(
+        "📂 Upload Participant Submission",
+        type=[
+            "txt",
+            "py",
+            "html",
+            "sql",
+            "csv",
+            "xlsx"
+        ],
+        key="submission_upload"
+    )
+
+    # ------------------------------------------------ #
+    # OPTIONAL DATASET
+    # ------------------------------------------------ #
+
+    uploaded_dataset = st.file_uploader(
+        "📊 Optional Dataset Upload",
+        type=[
+            "csv",
+            "xlsx"
+        ],
+        key="dataset_upload"
+    )
+
+    # ------------------------------------------------ #
+    # FILE PROCESSING
+    # ------------------------------------------------ #
+
+    def read_text_file(file):
+
+        return file.read().decode("utf-8")
+
+    dataset_info = ""
+
+    # Problem Statement File
+
+    if uploaded_problem is not None:
+
+        if (
+            uploaded_problem.name.endswith(".txt")
+            or uploaded_problem.name.endswith(".py")
+            or uploaded_problem.name.endswith(".html")
+        ):
+
+            problem_statement += (
+                "\n\n"
+                + read_text_file(uploaded_problem)
+            )
+
+    # Rubric File
+
+    if uploaded_rubric is not None:
+
+        if uploaded_rubric.name.endswith(".txt"):
+
+            rubric += (
+                "\n\n"
+                + read_text_file(uploaded_rubric)
+            )
+
+    # Submission File
+
+    if uploaded_submission is not None:
+
+        file_name = uploaded_submission.name
+
+        # TXT / PY / HTML / SQL
+
+        if (
+            file_name.endswith(".txt")
+            or file_name.endswith(".py")
+            or file_name.endswith(".html")
+            or file_name.endswith(".sql")
+        ):
+
+            participant_submission += (
+                "\n\n"
+                + read_text_file(uploaded_submission)
+            )
+
+            st.code(
+                participant_submission[:3000]
+            )
+
+        # CSV
+
+        elif file_name.endswith(".csv"):
+
+            df = pd.read_csv(
+                uploaded_submission
+            )
+
+            st.dataframe(df.head())
+
+            participant_submission += (
+                "\n\nDataset Preview:\n"
+                + df.head(20).to_string()
+            )
+
+        # XLSX
+
+        elif file_name.endswith(".xlsx"):
+
+            df = pd.read_excel(
+                uploaded_submission
+            )
+
+            st.dataframe(df.head())
+
+            participant_submission += (
+                "\n\nExcel Preview:\n"
+                + df.head(20).to_string()
+            )
+
+    # Optional Dataset
+
+    if uploaded_dataset is not None:
+
+        if uploaded_dataset.name.endswith(".csv"):
+
+            dataset_df = pd.read_csv(
+                uploaded_dataset
+            )
+
+        else:
+
             dataset_df = pd.read_excel(
                 uploaded_dataset
             )
@@ -161,11 +339,43 @@ for msg in st.session_state.messages:
                     dataset_info
                 )
 
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response
+            })
+
             st.markdown(
                 "# 📊 Evaluation Result"
             )
 
             st.markdown(response)
+
+            # Audio Summary
+
+            st.markdown(
+                "## 🔊 Audio Learning Summary"
+            )
+
+            audio_file, summary = (
+                audio_agent.generate_audio_summary(
+                    response
+                )
+            )
+
+            st.markdown(summary)
+
+            if audio_file:
+
+                audio_bytes = open(
+                    audio_file,
+                    "rb"
+                ).read()
+
+                st.audio(
+                    audio_bytes,
+                    format="audio/mp3"
+                )
+
 # ================================================= #
 # OTHER AGENTS
 # ================================================= #
@@ -318,31 +528,7 @@ if (
             selected_letter
         )
 
-    # Submit Quiz
-
     if st.button("✅ Submit Quiz"):
-
-        unanswered = []
-
-        for i in range(
-            len(st.session_state.quiz_data)
-        ):
-
-            if (
-                st.session_state.quiz_answers.get(i)
-                is None
-            ):
-
-                unanswered.append(i + 1)
-
-        if unanswered:
-
-            st.warning(
-                f"Please answer all questions. "
-                f"Missing: {unanswered}"
-            )
-
-            st.stop()
 
         score = 0
 
@@ -364,23 +550,18 @@ if (
                 st.session_state.quiz_answers[i]
             )
 
-            st.markdown(
-                f"## Q{i+1}: "
-                f"{question_data['question']}"
-            )
-
             if user_answer == correct_answer:
 
                 score += 1
 
                 st.success(
-                    f"✅ Correct"
+                    f"Q{i+1}: Correct"
                 )
 
             else:
 
                 st.error(
-                    f"❌ Incorrect"
+                    f"Q{i+1}: Incorrect"
                 )
 
             st.markdown(
@@ -395,64 +576,4 @@ if (
 
         st.markdown(
             f"# 🏆 Final Score: {score}/5"
-        )
-
-# ================================================= #
-# VISUALIZATION
-# ================================================= #
-
-if (
-    agent_type == "Coding Tutor"
-    and 'df' in locals()
-    and df is not None
-):
-
-    if "missing" in user_query.lower():
-
-        st.markdown("## 📊 Missing Values")
-
-        visual_agent.visualize_missing_values(df)
-
-    elif (
-        "outlier" in user_query.lower()
-        or "iqr" in user_query.lower()
-    ):
-
-        st.markdown("## 📊 Outlier Detection")
-
-        visual_agent.visualize_outliers(df)
-
-# ================================================= #
-# AUDIO SUMMARY
-# ================================================= #
-
-if (
-    len(st.session_state.messages) > 0
-    and agent_type != "Quiz Generator"
-):
-
-    latest_response = (
-        st.session_state.messages[-1]["content"]
-    )
-
-    st.markdown("## 🔊 Audio Learning Summary")
-
-    audio_file, summary = (
-        audio_agent.generate_audio_summary(
-            latest_response
-        )
-    )
-
-    st.markdown(summary)
-
-    if audio_file:
-
-        audio_bytes = open(
-            audio_file,
-            "rb"
-        ).read()
-
-        st.audio(
-            audio_bytes,
-            format="audio/mp3"
         )
