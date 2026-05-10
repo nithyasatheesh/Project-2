@@ -2,6 +2,7 @@
 
 import pandas as pd
 import streamlit as st
+import PyPDF2
 
 from agents.audio_summary_agent import AudioSummaryAgent
 from agents.coding_tutor_agent import CodingTutorAgent
@@ -105,6 +106,31 @@ for msg in st.session_state.messages:
 
         st.markdown(msg["content"])
 
+# ------------------------------------------------ #
+# FILE HELPERS
+# ------------------------------------------------ #
+
+def read_text_file(file):
+
+    return file.read().decode("utf-8")
+
+
+def read_pdf_file(file):
+
+    pdf_reader = PyPDF2.PdfReader(file)
+
+    text = ""
+
+    for page in pdf_reader.pages:
+
+        extracted = page.extract_text()
+
+        if extracted:
+
+            text += extracted
+
+    return text
+
 # ================================================= #
 # EVALUATOR AGENT
 # ================================================= #
@@ -147,10 +173,9 @@ if agent_type == "Evaluator Agent":
         "📂 Upload Rubric",
         type=[
             "txt",
-            "docx",
             "pdf",
-            "xlsx",
-            "csv"
+            "csv",
+            "xlsx"
         ],
         key="rubric_upload"
     )
@@ -190,19 +215,15 @@ if agent_type == "Evaluator Agent":
         key="dataset_upload"
     )
 
-    # ------------------------------------------------ #
-    # FILE PROCESSING
-    # ------------------------------------------------ #
-
-    def read_text_file(file):
-
-        return file.read().decode("utf-8")
-
     dataset_info = ""
 
-    # Problem Statement File
+    # ------------------------------------------------ #
+    # PROCESS PROBLEM STATEMENT
+    # ------------------------------------------------ #
 
     if uploaded_problem is not None:
+
+        # TXT / PY / HTML
 
         if (
             uploaded_problem.name.endswith(".txt")
@@ -215,9 +236,26 @@ if agent_type == "Evaluator Agent":
                 + read_text_file(uploaded_problem)
             )
 
-    # Rubric File
+        # PDF
+
+        elif uploaded_problem.name.endswith(".pdf"):
+
+            problem_statement += (
+                "\n\n"
+                + read_pdf_file(uploaded_problem)
+            )
+
+        st.markdown("## 📄 Problem Statement Preview")
+
+        st.text(problem_statement[:3000])
+
+    # ------------------------------------------------ #
+    # PROCESS RUBRIC
+    # ------------------------------------------------ #
 
     if uploaded_rubric is not None:
+
+        # TXT
 
         if uploaded_rubric.name.endswith(".txt"):
 
@@ -226,7 +264,52 @@ if agent_type == "Evaluator Agent":
                 + read_text_file(uploaded_rubric)
             )
 
-    # Submission File
+        # PDF
+
+        elif uploaded_rubric.name.endswith(".pdf"):
+
+            rubric += (
+                "\n\n"
+                + read_pdf_file(uploaded_rubric)
+            )
+
+        # CSV
+
+        elif uploaded_rubric.name.endswith(".csv"):
+
+            rubric_df = pd.read_csv(
+                uploaded_rubric
+            )
+
+            st.dataframe(rubric_df)
+
+            rubric += (
+                "\n\n"
+                + rubric_df.to_string()
+            )
+
+        # XLSX
+
+        elif uploaded_rubric.name.endswith(".xlsx"):
+
+            rubric_df = pd.read_excel(
+                uploaded_rubric
+            )
+
+            st.dataframe(rubric_df)
+
+            rubric += (
+                "\n\n"
+                + rubric_df.to_string()
+            )
+
+        st.markdown("## 📋 Rubric Preview")
+
+        st.text(rubric[:3000])
+
+    # ------------------------------------------------ #
+    # PROCESS PARTICIPANT SUBMISSION
+    # ------------------------------------------------ #
 
     if uploaded_submission is not None:
 
@@ -280,7 +363,9 @@ if agent_type == "Evaluator Agent":
                 + df.head(20).to_string()
             )
 
-    # Optional Dataset
+    # ------------------------------------------------ #
+    # OPTIONAL DATASET
+    # ------------------------------------------------ #
 
     if uploaded_dataset is not None:
 
@@ -341,11 +426,6 @@ if agent_type == "Evaluator Agent":
                     dataset_info
                 )
 
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response
-            })
-
             st.markdown(
                 "# 📊 Evaluation Result"
             )
@@ -384,8 +464,6 @@ if agent_type == "Evaluator Agent":
 
 else:
 
-    # Upload file
-
     uploaded_file = st.file_uploader(
         "📂 Upload Dataset or Code File",
         type=["csv", "txt", "py", "md"]
@@ -397,15 +475,11 @@ else:
 
     if uploaded_file is not None:
 
-        # CSV
-
         if uploaded_file.name.endswith(".csv"):
 
             df = pd.read_csv(uploaded_file)
 
             st.dataframe(df.head())
-
-        # Text/code
 
         else:
 
@@ -416,39 +490,20 @@ else:
 
             st.code(file_content[:2000])
 
-    # User Query
-
     user_query = st.text_area(
         "💬 Enter your question",
-        height=150,
-        placeholder="""
-Examples:
-- Explain CI/CD pipeline
-- Summarize uploaded document
-- Generate quiz on Spring Boot
-"""
+        height=150
     )
-
-    # Run Agent
 
     if st.button("🚀 Run Agent"):
 
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_query
-        })
-
         response = ""
-
-        # Coding Tutor
 
         if agent_type == "Coding Tutor":
 
             response = coding_agent.run(
                 user_query
             )
-
-        # Summary Agent
 
         elif agent_type == "Summary Agent":
 
@@ -461,10 +516,8 @@ Examples:
             else:
 
                 response = (
-                    "Please upload a document."
+                    "Please upload document."
                 )
-
-        # Quiz Generator
 
         elif agent_type == "Quiz Generator":
 
@@ -477,6 +530,11 @@ Examples:
             response = (
                 f"Quiz generated on: {user_query}"
             )
+
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_query
+        })
 
         st.session_state.messages.append({
             "role": "assistant",
