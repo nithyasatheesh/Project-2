@@ -113,172 +113,43 @@ for msg in st.session_state.messages:
 # EVALUATOR AGENT
 # ================================================= #
 
+# ================================================= #
+# EVALUATOR AGENT
+# ================================================= #
+
 if agent_type == "Evaluator Agent":
 
     st.markdown("# 🧪 Evaluator Agent")
 
-    # Problem Statement
+    # ------------------------------------------------ #
+    # PROBLEM STATEMENT
+    # ------------------------------------------------ #
 
     problem_statement = st.text_area(
-        "📝 Problem Statement",
-        height=180,
-        placeholder="""
-Example:
-Build a Python duplicate detection solution.
-"""
+        "📝 Type Problem Statement (Optional)",
+        height=180
     )
 
-    # Rubric
-
-    rubric = st.text_area(
-        "📋 Evaluation Rubric",
-        height=180,
-        placeholder="""
-1. Correctness - 40%
-2. Optimization - 20%
-3. Readability - 15%
-4. Error Handling - 15%
-5. Best Practices - 10%
-"""
-    )
-
-    # Upload submission
-
-    uploaded_submission = st.file_uploader(
-        "📂 Upload Participant Submission",
+    uploaded_problem = st.file_uploader(
+        "📂 Upload Problem Statement",
         type=[
             "txt",
             "py",
             "html",
             "pdf",
-            "pptx",
-            "docx",
-            "csv"
+            "docx"
         ],
-        key="evaluator_upload"
+        key="problem_upload"
     )
 
-    submission_content = ""
+    # ------------------------------------------------ #
+    # RUBRIC
+    # ------------------------------------------------ #
 
-    # Read file
-
-    if uploaded_submission is not None:
-
-        file_name = uploaded_submission.name
-
-        st.success(f"Uploaded: {file_name}")
-
-        # TXT / PY / HTML
-
-        if (
-            file_name.endswith(".txt")
-            or file_name.endswith(".py")
-            or file_name.endswith(".html")
-        ):
-
-            submission_content = (
-                uploaded_submission.read()
-                .decode("utf-8")
-            )
-
-            st.code(
-                submission_content[:3000]
-            )
-
-        # CSV
-
-        elif file_name.endswith(".csv"):
-
-            df = pd.read_csv(
-                uploaded_submission
-            )
-
-            submission_content = (
-                df.head(20).to_string()
-            )
-
-            st.dataframe(df.head())
-
-        # Binary docs
-
-        else:
-
-            submission_content = (
-                "Binary document uploaded."
-            )
-
-    # Run Evaluation
-
-    if st.button("🚀 Evaluate Submission"):
-
-        if (
-            not problem_statement.strip()
-            or not rubric.strip()
-            or not submission_content
-        ):
-
-            st.warning(
-                "Please provide all evaluator inputs."
-            )
-
-        else:
-
-            with st.spinner(
-                "Evaluating submission..."
-            ):
-
-                response = evaluator_agent.evaluate(
-                    problem_statement,
-                    rubric,
-                    submission_content
-                )
-
-            st.session_state.messages.append({
-                "role": "user",
-                "content":
-                f"Problem Statement:\n"
-                f"{problem_statement}\n\n"
-                f"Rubric:\n"
-                f"{rubric}"
-            })
-
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": response
-            })
-
-            st.markdown(
-                "# 📊 Evaluation Result"
-            )
-
+    rubric = st.text_area(
+        "📋 Type Evaluation Rubric (Optional)",
+        height=180
             st.markdown(response)
-
-            # Audio Summary
-
-            st.markdown(
-                "## 🔊 Audio Learning Summary"
-            )
-
-            audio_file, summary = (
-                audio_agent.generate_audio_summary(
-                    response
-                )
-            )
-
-            st.markdown(summary)
-
-            if audio_file:
-
-                audio_bytes = open(
-                    audio_file,
-                    "rb"
-                ).read()
-
-                st.audio(
-                    audio_bytes,
-                    format="audio/mp3"
-                )
-
 # ================================================= #
 # OTHER AGENTS
 # ================================================= #
