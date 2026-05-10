@@ -167,16 +167,102 @@ if st.button("🚀 Run Agent"):
 
     # ---------------- CASE STUDY EVALUATOR ---------------- #
 
-    elif agent_type == "Case Study Evaluator":
+   # UPDATED EVALUATOR SECTION IN app.py
 
-        response = case_agent.evaluate(
-            user_query
-        )
+from agents.evaluator_agent import EvaluatorAgent
 
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": response
-        })
+evaluator_agent = EvaluatorAgent()
+
+# ---------------- EVALUATOR UI ---------------- #
+
+if agent_type == "Evaluator Agent":
+
+    st.markdown("# 🧪 Evaluator Agent")
+
+    problem_statement = st.text_area(
+        "📝 Problem Statement",
+        height=180,
+        placeholder="""
+Example:
+Write a Python function to detect duplicates in a list.
+The solution should be optimized and avoid repeated outputs.
+"""
+    )
+
+    participant_solution = st.text_area(
+        "💻 Participant Solution",
+        height=300,
+        placeholder="""
+Paste participant code/solution here
+"""
+    )
+
+    if st.button("🚀 Evaluate Solution"):
+
+        if (
+            not problem_statement.strip()
+            or not participant_solution.strip()
+        ):
+
+            st.warning(
+                "Please provide both problem statement "
+                "and participant solution."
+            )
+
+        else:
+
+            # Save user interaction
+            st.session_state.messages.append({
+                "role": "user",
+                "content":
+                f"Problem Statement:\n"
+                f"{problem_statement}\n\n"
+                f"Participant Solution:\n"
+                f"{participant_solution}"
+            })
+
+            # Run evaluator
+            response = evaluator_agent.evaluate(
+                problem_statement,
+                participant_solution
+            )
+
+            # Save AI response
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response
+            })
+
+            # Display response
+            st.markdown("# 📊 Evaluation Result")
+
+            st.markdown(response)
+
+            # ---------------- AUDIO SUMMARY ---------------- #
+
+            st.markdown(
+                "## 🔊 Audio Learning Summary"
+            )
+
+            audio_file, summary = (
+                audio_agent.generate_audio_summary(
+                    response
+                )
+            )
+
+            st.markdown(summary)
+
+            if audio_file:
+
+                audio_bytes = open(
+                    audio_file,
+                    "rb"
+                ).read()
+
+                st.audio(
+                    audio_bytes,
+                    format="audio/mp3"
+                )
 
     # ---------------- QUIZ GENERATOR ---------------- #
 
