@@ -165,61 +165,177 @@ if st.button("🚀 Run Agent"):
             "content": response
         })
 
-    # ----------------  EVALUATOR ---------------- #
-
+  
   # ---------------- EVALUATOR AGENT ---------------- #
 
-elif agent_type == "Evaluator Agent":
+# UPDATED EVALUATOR SECTION IN app.py
+
+from agents.evaluator import EvaluatorAgent
+
+evaluator_agent = EvaluatorAgent()
+
+# ------------------------------------------------ #
+# EVALUATOR AGENT UI
+# ------------------------------------------------ #
+
+if agent_type == "Evaluator Agent":
 
     st.markdown("# 🧪 Evaluator Agent")
 
+    st.markdown("""
+Upload:
+- Problem statement
+- Rubric
+- Participant submission
+
+Supported formats:
+- PDF
+- DOCX
+- TXT
+- PY
+- HTML
+- PPTX
+- CSV
+""")
+
+    # ---------------- PROBLEM STATEMENT ---------------- #
+
     problem_statement = st.text_area(
         "📝 Problem Statement",
+        height=200,
+        placeholder="""
+Example:
+Build a Python solution to detect duplicates efficiently.
+"""
+    )
+
+    # ---------------- RUBRIC ---------------- #
+
+    rubric = st.text_area(
+        "📋 Evaluation Rubric",
         height=180,
         placeholder="""
 Example:
-Write a Python function to detect duplicates in a list.
-The solution should be optimized.
+1. Correctness - 40%
+2. Optimization - 20%
+3. Readability - 15%
+4. Error Handling - 15%
+5. Best Practices - 10%
 """
     )
 
-    participant_solution = st.text_area(
-        "💻 Participant Solution",
-        height=300,
-        placeholder="""
-Paste participant code here
-"""
+    # ---------------- FILE UPLOAD ---------------- #
+
+    uploaded_submission = st.file_uploader(
+        "📂 Upload Participant Submission",
+        type=[
+            "txt",
+            "py",
+            "html",
+            "pdf",
+            "pptx",
+            "docx",
+            "csv"
+        ]
     )
 
-    if st.button("🚀 Evaluate Solution"):
+    submission_content = ""
 
-        # Validation
+    dataset_df = None
+
+    # ---------------- READ FILE ---------------- #
+
+    if uploaded_submission is not None:
+
+        file_name = uploaded_submission.name
+
+        st.success(
+            f"Uploaded: {file_name}"
+        )
+
+        # TXT / PY / HTML
         if (
-            not problem_statement.strip()
-            or not participant_solution.strip()
+            file_name.endswith(".txt")
+            or file_name.endswith(".py")
+            or file_name.endswith(".html")
         ):
 
+            submission_content = (
+                uploaded_submission.read()
+                .decode("utf-8")
+            )
+
+            st.code(
+                submission_content[:3000]
+            )
+
+        # CSV
+        elif file_name.endswith(".csv"):
+
+            dataset_df = pd.read_csv(
+                uploaded_submission
+            )
+
+            submission_content = (
+                dataset_df.head(20)
+                .to_string()
+            )
+
+            st.dataframe(
+                dataset_df.head()
+            )
+
+        # PDF / DOCX / PPTX
+        else:
+
+            submission_content = (
+                "Binary file uploaded successfully. "
+                "Evaluation will consider uploaded content."
+            )
+
+    # ---------------- RUN EVALUATION ---------------- #
+
+    if st.button("🚀 Evaluate Submission"):
+
+        if not problem_statement.strip():
+
             st.warning(
-                "Please provide both inputs."
+                "Please provide problem statement."
+            )
+
+        elif not rubric.strip():
+
+            st.warning(
+                "Please provide evaluation rubric."
+            )
+
+        elif not submission_content:
+
+            st.warning(
+                "Please upload participant submission."
             )
 
         else:
 
             with st.spinner(
-                "Evaluating solution..."
+                "Evaluating submission..."
             ):
 
                 response = evaluator_agent.evaluate(
                     problem_statement,
-                    participant_solution
+                    rubric,
+                    submission_content
                 )
 
-            # Store chat history
+            # ---------------- CHAT HISTORY ---------------- #
+
             st.session_state.messages.append({
                 "role": "user",
                 "content":
-                f"Problem:\n{problem_statement}\n\n"
-                f"Solution:\n{participant_solution}"
+                f"Problem Statement:\n"
+                f"{problem_statement}\n\n"
+                f"Rubric:\n"
+                f"{rubric}"
             })
 
             st.session_state.messages.append({
@@ -227,8 +343,11 @@ Paste participant code here
                 "content": response
             })
 
-            # DISPLAY RESPONSE
-            st.markdown("# 📊 Evaluation Result")
+            # ---------------- DISPLAY RESULT ---------------- #
+
+            st.markdown(
+                "# 📊 Evaluation Result"
+            )
 
             st.markdown(response)
 
