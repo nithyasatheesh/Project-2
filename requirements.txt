@@ -5,3 +5,4 @@ pandas
 matplotlib
 gtts
 PyPDF2
+openpyxl
