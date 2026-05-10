@@ -148,7 +148,9 @@ if agent_type == "Evaluator Agent":
         type=[
             "txt",
             "docx",
-            "pdf","xlsx","csv"
+            "pdf",
+            "xlsx",
+            "csv"
         ],
         key="rubric_upload"
     )
