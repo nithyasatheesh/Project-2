@@ -76,6 +76,30 @@ agent_type = st.sidebar.selectbox(
 )
 
 # ------------------------------------------------ #
+# AGENT SWITCH HANDLER
+# ------------------------------------------------ #
+
+if "last_agent" not in st.session_state:
+
+    st.session_state.last_agent = agent_type
+
+if st.session_state.last_agent != agent_type:
+
+    # Clear quiz state
+    st.session_state.quiz_data = None
+
+    st.session_state.quiz_answers = {}
+
+    # Clear chat history
+    st.session_state.messages = []
+
+    # Update selected agent
+    st.session_state.last_agent = agent_type
+
+    # Refresh UI
+    st.rerun()
+
+# ------------------------------------------------ #
 # CHAT HISTORY
 # ------------------------------------------------ #
 
@@ -86,7 +110,7 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
 
 # ================================================= #
-# EVALUATOR AGENT UI
+# EVALUATOR AGENT
 # ================================================= #
 
 if agent_type == "Evaluator Agent":
@@ -118,7 +142,7 @@ Build a Python duplicate detection solution.
 """
     )
 
-    # Submission Upload
+    # Upload submission
 
     uploaded_submission = st.file_uploader(
         "📂 Upload Participant Submission",
@@ -144,7 +168,7 @@ Build a Python duplicate detection solution.
 
         st.success(f"Uploaded: {file_name}")
 
-        # Text/code
+        # TXT / PY / HTML
 
         if (
             file_name.endswith(".txt")
@@ -229,13 +253,39 @@ Build a Python duplicate detection solution.
 
             st.markdown(response)
 
+            # Audio Summary
+
+            st.markdown(
+                "## 🔊 Audio Learning Summary"
+            )
+
+            audio_file, summary = (
+                audio_agent.generate_audio_summary(
+                    response
+                )
+            )
+
+            st.markdown(summary)
+
+            if audio_file:
+
+                audio_bytes = open(
+                    audio_file,
+                    "rb"
+                ).read()
+
+                st.audio(
+                    audio_bytes,
+                    format="audio/mp3"
+                )
+
 # ================================================= #
 # OTHER AGENTS
 # ================================================= #
 
 else:
 
-    # Upload
+    # Upload file
 
     uploaded_file = st.file_uploader(
         "📂 Upload Dataset or Code File",
@@ -267,7 +317,7 @@ else:
 
             st.code(file_content[:2000])
 
-    # User query
+    # User Query
 
     user_query = st.text_area(
         "💬 Enter your question",
@@ -381,7 +431,31 @@ if (
             selected_letter
         )
 
+    # Submit Quiz
+
     if st.button("✅ Submit Quiz"):
+
+        unanswered = []
+
+        for i in range(
+            len(st.session_state.quiz_data)
+        ):
+
+            if (
+                st.session_state.quiz_answers.get(i)
+                is None
+            ):
+
+                unanswered.append(i + 1)
+
+        if unanswered:
+
+            st.warning(
+                f"Please answer all questions. "
+                f"Missing: {unanswered}"
+            )
+
+            st.stop()
 
         score = 0
 
@@ -403,18 +477,23 @@ if (
                 st.session_state.quiz_answers[i]
             )
 
+            st.markdown(
+                f"## Q{i+1}: "
+                f"{question_data['question']}"
+            )
+
             if user_answer == correct_answer:
 
                 score += 1
 
                 st.success(
-                    f"Q{i+1}: Correct"
+                    f"✅ Correct"
                 )
 
             else:
 
                 st.error(
-                    f"Q{i+1}: Incorrect"
+                    f"❌ Incorrect"
                 )
 
             st.markdown(
@@ -429,4 +508,64 @@ if (
 
         st.markdown(
             f"# 🏆 Final Score: {score}/5"
+        )
+
+# ================================================= #
+# VISUALIZATION
+# ================================================= #
+
+if (
+    agent_type == "Coding Tutor"
+    and 'df' in locals()
+    and df is not None
+):
+
+    if "missing" in user_query.lower():
+
+        st.markdown("## 📊 Missing Values")
+
+        visual_agent.visualize_missing_values(df)
+
+    elif (
+        "outlier" in user_query.lower()
+        or "iqr" in user_query.lower()
+    ):
+
+        st.markdown("## 📊 Outlier Detection")
+
+        visual_agent.visualize_outliers(df)
+
+# ================================================= #
+# AUDIO SUMMARY
+# ================================================= #
+
+if (
+    len(st.session_state.messages) > 0
+    and agent_type != "Quiz Generator"
+):
+
+    latest_response = (
+        st.session_state.messages[-1]["content"]
+    )
+
+    st.markdown("## 🔊 Audio Learning Summary")
+
+    audio_file, summary = (
+        audio_agent.generate_audio_summary(
+            latest_response
+        )
+    )
+
+    st.markdown(summary)
+
+    if audio_file:
+
+        audio_bytes = open(
+            audio_file,
+            "rb"
+        ).read()
+
+        st.audio(
+            audio_bytes,
+            format="audio/mp3"
         )
