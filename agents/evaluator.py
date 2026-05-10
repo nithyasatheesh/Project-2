@@ -18,7 +18,7 @@ class EvaluatorAgent:
         prompt = f"""
 You are an enterprise technical evaluator.
 
-Evaluate the participant submission.
+Evaluate the participant submission carefully.
 
 ========================
 PROBLEM STATEMENT
@@ -46,9 +46,7 @@ OPTIONAL DATASET INFO
 
 ========================
 
-Evaluate thoroughly.
-
-Return in this EXACT format:
+Return results in this format:
 
 # Evaluation Report
 
@@ -61,4 +59,37 @@ Return in this EXACT format:
 - Best Practices:
 
 ## Final Score
+
+-
+
+## Strengths
+
+-
+
+## Weaknesses
+
+-
+
+## Suggested Improvements
+
+-
+
+## Final Verdict
+
+-
+
+Be professional and constructive.
+"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.2
+        )
+
         return response.choices[0].message.content
