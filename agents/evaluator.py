@@ -11,7 +11,8 @@ class EvaluatorAgent:
         self,
         problem_statement,
         rubric,
-        submission_content
+        submission_content,
+        dataset_info=""
     ):
 
         prompt = f"""
@@ -38,6 +39,12 @@ PARTICIPANT SUBMISSION
 {submission_content}
 
 ========================
+OPTIONAL DATASET INFO
+========================
+
+{dataset_info}
+
+========================
 
 Evaluate thoroughly.
 
@@ -54,37 +61,4 @@ Return in this EXACT format:
 - Best Practices:
 
 ## Final Score
-
--
-
-## Strengths
-
--
-
-## Weaknesses
-
--
-
-## Suggested Improvements
-
--
-
-## Final Verdict
-
--
-
-Be professional and constructive.
-"""
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0.2
-        )
-
         return response.choices[0].message.content
