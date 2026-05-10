@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from agents.audio_summary_agent import AudioSummaryAgent
-from agents.case_study_evaluator import EvaluatorAgent
+from agents.evaluator_agent import EvaluatorAgent
 from agents.coding_tutor_agent import CodingTutorAgent
 from agents.quiz_generator_agent import QuizGeneratorAgent
 from agents.summary_agent import SummaryAgent
