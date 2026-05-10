@@ -165,17 +165,11 @@ if st.button("🚀 Run Agent"):
             "content": response
         })
 
-    # ---------------- CASE STUDY EVALUATOR ---------------- #
+    # ----------------  EVALUATOR ---------------- #
 
-   # UPDATED EVALUATOR SECTION IN app.py
+  # ---------------- EVALUATOR AGENT ---------------- #
 
-from agents.evaluator_agent import EvaluatorAgent
-
-evaluator_agent = EvaluatorAgent()
-
-# ---------------- EVALUATOR UI ---------------- #
-
-if agent_type == "Evaluator Agent":
+elif agent_type == "Evaluator Agent":
 
     st.markdown("# 🧪 Evaluator Agent")
 
@@ -185,7 +179,7 @@ if agent_type == "Evaluator Agent":
         placeholder="""
 Example:
 Write a Python function to detect duplicates in a list.
-The solution should be optimized and avoid repeated outputs.
+The solution should be optimized.
 """
     )
 
@@ -193,47 +187,47 @@ The solution should be optimized and avoid repeated outputs.
         "💻 Participant Solution",
         height=300,
         placeholder="""
-Paste participant code/solution here
+Paste participant code here
 """
     )
 
     if st.button("🚀 Evaluate Solution"):
 
+        # Validation
         if (
             not problem_statement.strip()
             or not participant_solution.strip()
         ):
 
             st.warning(
-                "Please provide both problem statement "
-                "and participant solution."
+                "Please provide both inputs."
             )
 
         else:
 
-            # Save user interaction
+            with st.spinner(
+                "Evaluating solution..."
+            ):
+
+                response = evaluator_agent.evaluate(
+                    problem_statement,
+                    participant_solution
+                )
+
+            # Store chat history
             st.session_state.messages.append({
                 "role": "user",
                 "content":
-                f"Problem Statement:\n"
-                f"{problem_statement}\n\n"
-                f"Participant Solution:\n"
-                f"{participant_solution}"
+                f"Problem:\n{problem_statement}\n\n"
+                f"Solution:\n{participant_solution}"
             })
 
-            # Run evaluator
-            response = evaluator_agent.evaluate(
-                problem_statement,
-                participant_solution
-            )
-
-            # Save AI response
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response
             })
 
-            # Display response
+            # DISPLAY RESPONSE
             st.markdown("# 📊 Evaluation Result")
 
             st.markdown(response)
@@ -263,7 +257,6 @@ Paste participant code/solution here
                     audio_bytes,
                     format="audio/mp3"
                 )
-
     # ---------------- QUIZ GENERATOR ---------------- #
 
     elif agent_type == "Quiz Generator":
