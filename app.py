@@ -36,7 +36,7 @@ coding_agent = CodingTutorAgent()
 
 summary_agent = SummaryAgent()
 
-case_agent = CaseStudyEvaluator()
+case_agent = EvaluatorAgent()
 
 quiz_agent = QuizGeneratorAgent()
 
