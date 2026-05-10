@@ -1,4 +1,4 @@
-# agents/evaluator_agent.py
+# agents/evaluator.py
 
 from openai import OpenAI
 
@@ -10,52 +10,74 @@ class EvaluatorAgent:
     def evaluate(
         self,
         problem_statement,
-        participant_solution
+        rubric,
+        submission_content
     ):
 
         prompt = f"""
 You are an enterprise technical evaluator.
 
-Evaluate the participant solution based on
-the given problem statement.
+Evaluate the participant submission based on:
 
-Problem Statement:
+1. Problem Statement
+2. Rubric
+3. Participant Submission
+
+-----------------------------------
+PROBLEM STATEMENT
+-----------------------------------
+
 {problem_statement}
 
-Participant Solution:
-{participant_solution}
+-----------------------------------
+RUBRIC
+-----------------------------------
 
-Evaluate using this rubric:
+{rubric}
 
-1. Correctness (40%)
-2. Optimization (20%)
-3. Readability (15%)
-4. Error Handling (15%)
-5. Best Practices (10%)
+-----------------------------------
+PARTICIPANT SUBMISSION
+-----------------------------------
+
+{submission_content}
+
+-----------------------------------
+
+Evaluate thoroughly.
 
 Return response in this EXACT format:
 
-Correctness Score:
-Optimization Score:
-Readability Score:
-Error Handling Score:
-Best Practices Score:
+# Evaluation Report
 
-Final Score:
+## Rubric Scores
 
-Strengths:
+- Correctness:
+- Optimization:
+- Readability:
+- Error Handling:
+- Best Practices:
+
+## Final Score
+
 -
 
-Weaknesses:
+## Strengths
+
 -
 
-Suggested Improvements:
+## Weaknesses
+
 -
 
-Final Verdict:
+## Suggested Improvements
+
 -
 
-Be strict but constructive.
+## Final Verdict
+
+-
+
+Be detailed, professional, and constructive.
 """
 
         response = client.chat.completions.create(
