@@ -198,6 +198,10 @@ if st.button("🚀 Run Agent"):
 
 # ---------------- DISPLAY QUIZ ---------------- #
 
+# UPDATED QUIZ SECTION IN app.py
+
+# ---------------- DISPLAY QUIZ ---------------- #
+
 if (
     agent_type == "Quiz Generator"
     and st.session_state.quiz_data
@@ -216,18 +220,26 @@ if (
 
         options = question_data["options"]
 
+        # ---------------- RADIO BUTTON ---------------- #
+
         selected = st.radio(
             "Choose your answer",
             [
+                "Select an option",
                 f"A. {options['A']}",
                 f"B. {options['B']}",
                 f"C. {options['C']}",
                 f"D. {options['D']}"
             ],
+            index=0,
             key=f"quiz_{i}"
         )
 
-        selected_letter = selected[0]
+        selected_letter = None
+
+        if selected != "Select an option":
+
+            selected_letter = selected[0]
 
         st.session_state.quiz_answers[i] = (
             selected_letter
@@ -236,6 +248,32 @@ if (
     # ---------------- SUBMIT QUIZ ---------------- #
 
     if st.button("✅ Submit Quiz"):
+
+        # ---------------- VALIDATION ---------------- #
+
+        unanswered = []
+
+        for i in range(
+            len(st.session_state.quiz_data)
+        ):
+
+            if (
+                st.session_state.quiz_answers.get(i)
+                is None
+            ):
+
+                unanswered.append(i + 1)
+
+        if unanswered:
+
+            st.warning(
+                f"Please answer all questions. "
+                f"Missing: {unanswered}"
+            )
+
+            st.stop()
+
+        # ---------------- SCORING ---------------- #
 
         score = 0
 
@@ -270,14 +308,16 @@ if (
                 f"Correct Answer: {correct_answer}"
             )
 
-            # Correct answer
+            # ---------------- CORRECT ---------------- #
+
             if user_answer == correct_answer:
 
                 score += 1
 
                 st.success("✅ Correct")
 
-            # Incorrect answer
+            # ---------------- INCORRECT ---------------- #
+
             else:
 
                 st.error("❌ Incorrect")
@@ -291,8 +331,11 @@ if (
         # ---------------- FINAL SCORE ---------------- #
 
         st.markdown(
-            f"# 🏆 Final Score: {score}/5"
+            f"# 🏆 Final Score: "
+            f"{score}/5"
         )
+
+        # ---------------- FEEDBACK ---------------- #
 
         if score == 5:
 
@@ -311,7 +354,6 @@ if (
             st.warning(
                 "Need more practice on this topic."
             )
-
 # ---------------- VISUALIZATION ---------------- #
 
 if df is not None:
