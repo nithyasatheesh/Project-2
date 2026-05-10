@@ -24,7 +24,7 @@ st.markdown("""
 ### Features
 - Coding Tutor Agent
 - Summary Agent
-- Case Study Evaluator
+- Evaluator Agent
 - Interactive Quiz Generator
 - Dataset Visualization
 - Audio Learning Summary
@@ -62,7 +62,7 @@ agent_type = st.sidebar.selectbox(
     [
         "Coding Tutor",
         "Summary Agent",
-        "Case Study Evaluator",
+        "Evaluator Agent",
         "Quiz Generator"
     ]
 )
