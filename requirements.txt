@@ -4,3 +4,4 @@ openai
 pandas
 matplotlib
 gtts
+PyPDF2
